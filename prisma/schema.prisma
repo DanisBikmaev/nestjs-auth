@@ -11,17 +11,21 @@ datasource db {
 }
 
 model User {
-  id       Int      @id @default(autoincrement())
-  email    String   @unique
-  name     String
-  password String
-  bcards   BCards[]
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String
+  password  String
+  bcards    BCards[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 }
 
 model BCards {
-  id          Int    @id @default(autoincrement())
-  User        User   @relation(fields: [userId], references: [id])
+  id          Int      @id @default(autoincrement())
+  User        User     @relation(fields: [userId], references: [id])
   userId      Int
   title       String
   description String
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 }

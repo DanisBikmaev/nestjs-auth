@@ -1,16 +1,10 @@
-import {
-  Controller,
-  Post,
-  Body,
-  HttpCode,
-  UseGuards,
-  Req,
-} from '@nestjs/common';
-import { AuthService } from 'src/auth//auth.service';
+import { Controller, Post, Body, UseGuards, Get, Req } from '@nestjs/common';
+import { AuthService } from 'src/auth/auth.service';
 import { RegisterDto } from 'src/auth/dto/register.dto';
+import { LoginDto } from 'src/auth/dto/login.dto';
 import { ApiTags } from '@nestjs/swagger';
-import { LocalAuthGuard } from 'src/auth/localAuth.guard';
-import RequestWithUser from './requestWithUser.interface';
+import { AuthGuard } from 'src/auth/auth.guard';
+import { Request } from 'express';
 
 @Controller('auth')
 @ApiTags('auth')
@@ -18,15 +12,17 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
-  async register(@Body() registerDto: RegisterDto) {
+  register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
   }
-
-  @HttpCode(200)
-  @UseGuards(LocalAuthGuard)
   @Post('login')
-  async login(@Req() request: RequestWithUser) {
-    const user = request.user;
-    return user;
+  login(@Body() loginDto: LoginDto) {
+    return this.authService.login(loginDto);
+  }
+  @UseGuards(AuthGuard)
+  @Get('profile')
+  getProfile(@Req() req: Request) {
+    console.log(req);
+    return req.user;
   }
 }
