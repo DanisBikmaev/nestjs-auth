@@ -7,9 +7,9 @@ import { PrismaService } from 'src/modules/prisma/prisma.service';
 export class BcardsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(createBcardDto: CreateBcardDto) {
+  async create(createBcardDto: CreateBcardDto, user: any) {
     return await this.prisma.bCards.create({
-      data: createBcardDto,
+      data: { ...createBcardDto, userId: user.id },
     });
   }
 

@@ -23,8 +23,7 @@ export class BcardsController {
   @Post()
   @UseGuards(JwtAuthGuard)
   create(@Body() createBcardDto: CreateBcardDto, @AuthUser() user: any) {
-    return this.bcardsService.create({ ...createBcardDto, userId: user.id });
-    //TODO: user.id to User model
+    return this.bcardsService.create(createBcardDto, user);
   }
 
   @Get()
