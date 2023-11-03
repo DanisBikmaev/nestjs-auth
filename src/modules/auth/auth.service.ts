@@ -1,14 +1,9 @@
-import {
-  HttpException,
-  HttpStatus,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
-import { RegisterDto } from 'src/auth/dto/register.dto';
-import { LoginDto } from 'src/auth/dto/login.dto';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { RegisterDto } from 'src/modules/auth/dto/register.dto';
+import { LoginDto } from 'src/modules/auth/dto/login.dto';
 import * as bcrypt from 'bcrypt';
-import { UsersService } from 'src/users/users.service';
-import { CreateUserDto } from 'src/users/dto/create-user.dto';
+import { UsersService } from 'src/modules/users/users.service';
+import { CreateUserDto } from 'src/modules/users/dto/create-user.dto';
 import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
@@ -30,7 +25,7 @@ export class AuthService {
     return user;
   }
   async login(loginData: LoginDto) {
-    const user = await this.usersService.getByEmail(loginData.email);
+    const user = await this.usersService.findOneByEmail(loginData.email);
     if (!user) {
       throw new UnauthorizedException();
     }
@@ -40,6 +35,11 @@ export class AuthService {
       access_token: await this.jwtService.signAsync(payload),
     };
     return accessToken;
+  }
+
+  async getCurentUser(userId: number) {
+    const user = await this.usersService.findOneById(userId);
+    return user;
   }
 
   async verifyPassword(password: string, hashedPassword: string) {

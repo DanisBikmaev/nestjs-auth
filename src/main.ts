@@ -8,6 +8,7 @@ async function bootstrap() {
     .setTitle('Visitka')
     .setDescription('Visitka swagger')
     .setVersion('1.0')
+    .addBearerAuth()
     .addTag('visitka')
     .build();
   const document = SwaggerModule.createDocument(app, config);

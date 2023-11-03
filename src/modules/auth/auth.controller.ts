@@ -1,10 +1,10 @@
 import { Controller, Post, Body, UseGuards, Get, Req } from '@nestjs/common';
-import { AuthService } from 'src/auth/auth.service';
-import { RegisterDto } from 'src/auth/dto/register.dto';
-import { LoginDto } from 'src/auth/dto/login.dto';
+import { AuthService } from 'src/modules/auth/auth.service';
+import { RegisterDto } from 'src/modules/auth/dto/register.dto';
+import { LoginDto } from 'src/modules/auth/dto/login.dto';
 import { ApiTags } from '@nestjs/swagger';
-import { AuthGuard } from 'src/auth/auth.guard';
-import { Request } from 'express';
+import { JwtAuthGuard } from './jwt-auth.guard';
+import { AuthUser } from 'src/shared/decorators/auth-user.decorator';
 
 @Controller('auth')
 @ApiTags('auth')
@@ -15,14 +15,15 @@ export class AuthController {
   register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
   }
+
   @Post('login')
   login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
   }
-  @UseGuards(AuthGuard)
+
+  @UseGuards(JwtAuthGuard)
   @Get('profile')
-  getProfile(@Req() req: Request) {
-    console.log(req);
-    return req.user;
+  getProfile(@AuthUser() user: any) {
+    return this.authService.getCurentUser(user.id);
   }
 }

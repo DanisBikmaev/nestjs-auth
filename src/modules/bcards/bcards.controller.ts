@@ -6,11 +6,14 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { BcardsService } from './bcards.service';
 import { CreateBcardDto } from './dto/create-bcard.dto';
 import { UpdateBcardDto } from './dto/update-bcard.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { AuthUser } from 'src/shared/decorators/auth-user.decorator';
 
 @Controller('bcards')
 @ApiTags('buisness cards')
@@ -18,8 +21,10 @@ export class BcardsController {
   constructor(private readonly bcardsService: BcardsService) {}
 
   @Post()
-  create(@Body() createBcardDto: CreateBcardDto) {
-    return this.bcardsService.create(createBcardDto);
+  @UseGuards(JwtAuthGuard)
+  create(@Body() createBcardDto: CreateBcardDto, @AuthUser() user: any) {
+    return this.bcardsService.create({ ...createBcardDto, userId: user.id });
+    //TODO: user.id to User model
   }
 
   @Get()

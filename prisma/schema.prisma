@@ -13,7 +13,7 @@ datasource db {
 model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
-  name      String
+  username  String
   password  String
   bcards    BCards[]
   createdAt DateTime @default(now()) @map("created_at")
@@ -23,6 +23,7 @@ model User {
 model BCards {
   id          Int      @id @default(autoincrement())
   User        User     @relation(fields: [userId], references: [id])
+  //TODO: "User to lowercase"
   userId      Int
   title       String
   description String
