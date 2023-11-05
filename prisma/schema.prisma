@@ -11,22 +11,41 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
+  id        String     @id @default(uuid())
+  email     String     @unique
   username  String
   password  String
+  roles     UserRole[] @default([USER])
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
   bcards    BCards[]
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  Token     Token[]
+
+  @@map("users")
+}
+
+model Token {
+  token  String   @unique
+  exp    DateTime
+  user   User     @relation(fields: [userId], references: [id])
+  userId String
+
+  @@map("token")
 }
 
 model BCards {
   id          Int      @id @default(autoincrement())
-  User        User     @relation(fields: [userId], references: [id])
-  //TODO: "User to lowercase"
-  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String
   title       String
   description String
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("bcards")
+}
+
+enum UserRole {
+  ADMIN
+  USER
 }
