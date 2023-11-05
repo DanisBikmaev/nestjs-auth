@@ -1,10 +1,16 @@
 import { Module } from '@nestjs/common';
-import { UsersModule } from './modules/users/users.module';
-import { BcardsModule } from './modules/bcards/bcards.module';
-import { AuthModule } from './modules/auth/auth.module';
+import { UsersModule } from './user/user.module';
+import { PrismaModule } from './prisma/prisma.module';
+import { ConfigModule } from '@nestjs/config';
+import { AuthModule } from '@auth/auth.module';
 
 @Module({
-  imports: [UsersModule, BcardsModule, AuthModule],
+  imports: [
+    AuthModule,
+    UsersModule,
+    PrismaModule,
+    ConfigModule.forRoot({ isGlobal: true }),
+  ],
   controllers: [],
   providers: [],
 })
