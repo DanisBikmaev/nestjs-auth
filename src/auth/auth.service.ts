@@ -49,6 +49,10 @@ export class AuthService {
     if (!user || !compareSync(dto.password, user.password)) {
       throw new UnauthorizedException('Не верный логин или пароль');
     }
+    return this.generateTokens(user);
+  }
+
+  private async generateTokens(user: User): Promise<Tokens> {
     const accessToken =
       'Bearer ' +
       (await this.jwtService.signAsync({
@@ -58,6 +62,17 @@ export class AuthService {
       }));
     const refreshToken = await this.getRefreshToken(user.id);
     return { accessToken, refreshToken };
+  }
+
+  async refreshTokens(refreshToken: string) {
+    const token = await this.prisma.token.delete({
+      where: { token: refreshToken },
+    });
+    if (!token) {
+      throw new UnauthorizedException();
+    }
+    const user = await this.userService.findOne(token.userId);
+    return this.generateTokens(user!);
   }
 
   private async getRefreshToken(userId: string): Promise<Token> {
