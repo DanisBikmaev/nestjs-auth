@@ -14,6 +14,8 @@ import { UserService } from './user.service';
 import { ApiTags } from '@nestjs/swagger';
 import { UserResponse } from './responses';
 import { User } from '@prisma/client';
+import { CurrentUser } from '@shared/decorators';
+import { JwtPayload } from '@auth/interfaces';
 
 @Controller('users')
 @ApiTags('users')
@@ -46,8 +48,11 @@ export class UsersController {
   }
   @UseInterceptors(ClassSerializerInterceptor)
   @Delete(':id')
-  async delete(@Param('id', ParseUUIDPipe) id: string) {
-    const user = await this.usersService.delete(id);
+  async delete(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() currentUser: JwtPayload,
+  ) {
+    const user = await this.usersService.delete(id, currentUser);
     return user;
   }
 }
