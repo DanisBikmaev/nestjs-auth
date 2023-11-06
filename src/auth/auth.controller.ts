@@ -7,13 +7,15 @@ import {
   UnauthorizedException,
   Res,
   HttpStatus,
+  Req,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto, RegisterDto } from './dto';
 import { Tokens } from './interfaces';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
-import { Cookie } from '@shared/decorators';
+import { Cookie, UserAgent } from '@shared/decorators';
+import { agent } from 'supertest';
 
 const REFRESH_TOKEN = 'refreshToken';
 
@@ -36,9 +38,14 @@ export class AuthController {
     }
     return user;
   }
+
   @Post('login')
-  async login(@Body() dto: LoginDto, @Res() res: Response) {
-    const tokens = await this.authService.login(dto);
+  async login(
+    @Body() dto: LoginDto,
+    @Res() res: Response,
+    @UserAgent() agent: string,
+  ) {
+    const tokens = await this.authService.login(dto, agent);
     if (!tokens) {
       throw new BadRequestException(
         `Не получается войти с данными: ${JSON.stringify(dto)} `,
@@ -51,11 +58,12 @@ export class AuthController {
   async refreshTokens(
     @Cookie(REFRESH_TOKEN) refreshToken: string,
     @Res() res: Response,
+    @UserAgent() agent: string,
   ) {
     if (!refreshToken) {
       throw new UnauthorizedException();
     }
-    const tokens = await this.authService.refreshTokens(refreshToken);
+    const tokens = await this.authService.refreshTokens(refreshToken, agent);
     if (!tokens) {
       throw new UnauthorizedException();
     }
