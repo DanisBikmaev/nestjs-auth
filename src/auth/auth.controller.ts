@@ -7,15 +7,16 @@ import {
   UnauthorizedException,
   Res,
   HttpStatus,
-  Req,
+  UseInterceptors,
+  ClassSerializerInterceptor,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto, RegisterDto } from './dto';
 import { Tokens } from './interfaces';
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { Cookie, Public, UserAgent } from '@shared/decorators';
-import { agent } from 'supertest';
+import { UserResponse } from '@user/responses';
 
 const REFRESH_TOKEN = 'refreshToken';
 
@@ -26,7 +27,7 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly configService: ConfigService,
   ) {}
-
+  @UseInterceptors(ClassSerializerInterceptor)
   @Post('register')
   async register(@Body() dto: RegisterDto) {
     const user = await this.authService.register(dto);
@@ -37,7 +38,7 @@ export class AuthController {
         )} `,
       );
     }
-    return user;
+    return new UserResponse(user);
   }
 
   @Post('login')

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { genSaltSync, hashSync } from 'bcrypt';
 
@@ -18,9 +18,13 @@ export class UserService {
   }
 
   async findOne(idOrEmail: string) {
-    return await this.prisma.user.findFirst({
+    const user = await this.prisma.user.findFirst({
       where: { OR: [{ id: idOrEmail }, { email: idOrEmail }] },
     });
+    if (!user) {
+      throw new BadRequestException('Пользователь не найден');
+    }
+    return user;
   }
 
   async update(id: string, dto: any) {
@@ -30,8 +34,11 @@ export class UserService {
     });
   }
 
-  async remove(id: string) {
-    return await this.prisma.user.delete({ where: { id } });
+  async delete(id: string) {
+    return await this.prisma.user.delete({
+      where: { id },
+      select: { id: true },
+    });
   }
   private hashPassword(password: string) {
     return hashSync(password, genSaltSync(10));
