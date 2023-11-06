@@ -14,11 +14,12 @@ import { LoginDto, RegisterDto } from './dto';
 import { Tokens } from './interfaces';
 import { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
-import { Cookie, UserAgent } from '@shared/decorators';
+import { Cookie, Public, UserAgent } from '@shared/decorators';
 import { agent } from 'supertest';
 
 const REFRESH_TOKEN = 'refreshToken';
 
+@Public()
 @Controller('auth')
 export class AuthController {
   constructor(
