@@ -6,7 +6,7 @@ import {
 import { PrismaService } from 'src/prisma/prisma.service';
 import { genSaltSync, hashSync } from 'bcrypt';
 import { JwtPayload } from '@auth/interfaces';
-import { UserRole } from '@prisma/client';
+import { Role } from '@prisma/client';
 
 @Injectable()
 export class UserService {
@@ -41,7 +41,7 @@ export class UserService {
   }
 
   async delete(id: string, currentUser: JwtPayload) {
-    if (currentUser.id !== id && !currentUser.roles.includes(UserRole.ADMIN)) {
+    if (currentUser.id !== id && !currentUser.roles.includes(Role.ADMIN)) {
       throw new ForbiddenException();
     }
     return await this.prisma.user.delete({

@@ -9,14 +9,24 @@ import {
   HttpStatus,
   UseInterceptors,
   ClassSerializerInterceptor,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto, RegisterDto } from './dto';
-import { Tokens } from './interfaces';
+import { JwtPayload, Tokens } from './interfaces';
 import { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
-import { Cookie, Public, UserAgent } from '@shared/decorators';
+import {
+  Cookie,
+  CurrentUser,
+  Public,
+  Roles,
+  UserAgent,
+} from '@shared/decorators';
 import { UserResponse } from '@user/responses';
+import { RolesGuard } from './guards/role.guard';
+import { Role } from '@prisma/client';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 const REFRESH_TOKEN = 'refreshToken';
 
@@ -72,6 +82,13 @@ export class AuthController {
       expires: new Date(),
     });
     res.sendStatus(HttpStatus.OK);
+  }
+
+  // @UseGuards(JwtAuthGuard, RolesGuard)
+  // @Roles(Role.ADMIN)
+  @Get('profile')
+  profile(@CurrentUser() user: JwtPayload) {
+    return user;
   }
 
   @Get('refresh-tokens')
