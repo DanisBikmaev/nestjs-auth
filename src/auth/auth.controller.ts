@@ -10,11 +10,12 @@ import {
   UseInterceptors,
   ClassSerializerInterceptor,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto, RegisterDto } from './dto';
 import { JwtPayload, Tokens } from './interfaces';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import {
   Cookie,
@@ -26,7 +27,7 @@ import {
 import { UserResponse } from '@user/responses';
 import { RolesGuard } from './guards/role.guard';
 import { Role } from '@prisma/client';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { AuthGuard } from '@nestjs/passport';
 
 const REFRESH_TOKEN = 'refreshToken';
 
@@ -84,11 +85,12 @@ export class AuthController {
     res.sendStatus(HttpStatus.OK);
   }
 
-  // @UseGuards(JwtAuthGuard, RolesGuard)
-  // @Roles(Role.ADMIN)
   @Get('profile')
-  profile(@CurrentUser() user: JwtPayload) {
-    return user;
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  //TODO: решить эту проблему с AuthGuard
+  @Roles(Role.ADMIN)
+  profile(@CurrentUser() currentUser: JwtPayload) {
+    return currentUser;
   }
 
   @Get('refresh-tokens')
