@@ -15,20 +15,20 @@ import { convertToSecondsUtil } from '@shared/utils';
 @Injectable()
 export class UserService {
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly prismaService: PrismaService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly configService: ConfigService,
   ) {}
 
   async save(dto: any) {
     const hashedPassword = await this.hashPassword(dto.password);
-    return await this.prisma.user.create({
+    return await this.prismaService.user.create({
       data: { ...dto, password: hashedPassword },
     });
   }
 
   async findAll() {
-    return await this.prisma.user.findMany();
+    return await this.prismaService.user.findMany();
   }
 
   async findOne(idOrEmail: string, isReset = false) {
@@ -37,7 +37,7 @@ export class UserService {
     }
     const user = await this.cacheManager.get<User>(idOrEmail);
     if (!user) {
-      const user = await this.prisma.user.findFirst({
+      const user = await this.prismaService.user.findFirst({
         where: { OR: [{ id: idOrEmail }, { email: idOrEmail }] },
       });
       if (!user) {
@@ -54,7 +54,7 @@ export class UserService {
   }
 
   async update(id: string, dto: any) {
-    return await this.prisma.user.update({
+    return await this.prismaService.user.update({
       where: { id },
       data: dto,
     });
@@ -68,7 +68,7 @@ export class UserService {
       this.cacheManager.del(id),
       this.cacheManager.del(currentUser.email),
     ]);
-    return await this.prisma.user.delete({
+    return await this.prismaService.user.delete({
       where: { id },
       select: { id: true },
     });

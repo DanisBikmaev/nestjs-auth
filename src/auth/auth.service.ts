@@ -20,7 +20,7 @@ export class AuthService {
   constructor(
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
-    private readonly prisma: PrismaService,
+    private readonly prismaService: PrismaService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -65,13 +65,13 @@ export class AuthService {
   }
 
   async refreshTokens(refreshToken: string, agent: string) {
-    const token = await this.prisma.token.findUnique({
+    const token = await this.prismaService.token.findUnique({
       where: { token: refreshToken },
     });
     if (!token) {
       throw new UnauthorizedException();
     }
-    await this.prisma.token.delete({
+    await this.prismaService.token.delete({
       where: { token: refreshToken },
     });
     if (new Date(token.exp) < new Date()) {
@@ -83,11 +83,11 @@ export class AuthService {
   }
 
   private async getRefreshToken(userId: string, agent: string): Promise<Token> {
-    const _token = await this.prisma.token.findFirst({
+    const _token = await this.prismaService.token.findFirst({
       where: { userId, userAgent: agent },
     });
     const token = _token?.token ?? '';
-    return this.prisma.token.upsert({
+    return this.prismaService.token.upsert({
       where: { token },
       update: {
         token: v4(),
@@ -103,6 +103,6 @@ export class AuthService {
   }
 
   async deleteRefreshToken(token: string) {
-    return await this.prisma.token.delete({ where: { token } });
+    return await this.prismaService.token.delete({ where: { token } });
   }
 }
