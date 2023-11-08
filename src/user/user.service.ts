@@ -1,16 +1,24 @@
 import {
   BadRequestException,
   ForbiddenException,
+  Inject,
   Injectable,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { genSaltSync, hashSync } from 'bcrypt';
 import { JwtPayload } from '@auth/interfaces';
-import { Role } from '@prisma/client';
-
+import { Role, User } from '@prisma/client';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
+import { ConfigService } from '@nestjs/config';
+import { convertToSecondsUtil } from '@shared/utils';
 @Injectable()
 export class UserService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private readonly configService: ConfigService,
+  ) {}
 
   async save(dto: any) {
     const hashedPassword = await this.hashPassword(dto.password);
@@ -23,12 +31,24 @@ export class UserService {
     return await this.prisma.user.findMany();
   }
 
-  async findOne(idOrEmail: string) {
-    const user = await this.prisma.user.findFirst({
-      where: { OR: [{ id: idOrEmail }, { email: idOrEmail }] },
-    });
+  async findOne(idOrEmail: string, isReset = false) {
+    if (isReset) {
+      await this.cacheManager.del(idOrEmail);
+    }
+    const user = await this.cacheManager.get<User>(idOrEmail);
     if (!user) {
-      throw new BadRequestException('Пользователь не найден');
+      const user = await this.prisma.user.findFirst({
+        where: { OR: [{ id: idOrEmail }, { email: idOrEmail }] },
+      });
+      if (!user) {
+        throw new BadRequestException('Пользователь не найден');
+      }
+      await this.cacheManager.set(
+        idOrEmail,
+        user,
+        convertToSecondsUtil(this.configService.get('JWT_EXP')),
+      );
+      return user;
     }
     return user;
   }
@@ -44,6 +64,10 @@ export class UserService {
     if (currentUser.id !== id && !currentUser.roles.includes(Role.ADMIN)) {
       throw new ForbiddenException();
     }
+    await Promise.all([
+      this.cacheManager.del(id),
+      this.cacheManager.del(currentUser.email),
+    ]);
     return await this.prisma.user.delete({
       where: { id },
       select: { id: true },

@@ -9,25 +9,14 @@ import {
   HttpStatus,
   UseInterceptors,
   ClassSerializerInterceptor,
-  UseGuards,
-  Req,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto, RegisterDto } from './dto';
-import { JwtPayload, Tokens } from './interfaces';
-import { Request, Response } from 'express';
+import { Tokens } from './interfaces';
+import { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
-import {
-  Cookie,
-  CurrentUser,
-  Public,
-  Roles,
-  UserAgent,
-} from '@shared/decorators';
+import { Cookie, Public, UserAgent } from '@shared/decorators';
 import { UserResponse } from '@user/responses';
-import { RolesGuard } from './guards/role.guard';
-import { Role } from '@prisma/client';
-import { AuthGuard } from '@nestjs/passport';
 
 const REFRESH_TOKEN = 'refreshToken';
 
@@ -38,8 +27,9 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly configService: ConfigService,
   ) {}
-  @UseInterceptors(ClassSerializerInterceptor)
+
   @Post('register')
+  @UseInterceptors(ClassSerializerInterceptor)
   async register(@Body() dto: RegisterDto) {
     const user = await this.authService.register(dto);
     if (!user) {
@@ -83,14 +73,6 @@ export class AuthController {
       expires: new Date(),
     });
     res.sendStatus(HttpStatus.OK);
-  }
-
-  @Get('profile')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  //TODO: решить эту проблему с AuthGuard
-  @Roles(Role.ADMIN)
-  profile(@CurrentUser() currentUser: JwtPayload) {
-    return currentUser;
   }
 
   @Get('refresh-tokens')
